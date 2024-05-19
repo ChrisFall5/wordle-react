@@ -1,0 +1,8 @@
+.letter-square {
+  display: inline-block;
+  width: 3em;
+  height: 3em;
+  margin: .25em;
+  text-align: center;
+  border: 3px solid black;
+}
