@@ -137,7 +137,7 @@ export default function Home() {
   const renderErrorMessage = () => (
     <Message 
       negative
-      header='Invalid input provided.'
+      header='Invalid Input Provided'
       content={(
         <ul className={styles['error-message-content']}>
           <li>Words must be 5 letters long.</li>
@@ -151,7 +151,7 @@ export default function Home() {
   const renderLossMessage = () => (
     <Message
       negative
-      header='Game Over'
+      header='Game Over!'
       content={`The correct word was: ${correctWord}.`}
     />
   );
