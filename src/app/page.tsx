@@ -3,11 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { GameGrid } from "@/GameGrid/GameGrid";
 import { Input, Grid, Button, Message } from "semantic-ui-react";
+import Keyboard from "react-simple-keyboard";
+import _ from 'lodash';
 import {
   validateWord,
   normalizeWord,
   calculateWin,
   getRandomInt,
+  evaluateLetters,
 } from "@/util/helperFunctions";
 import { WordBank } from "@/util/fiveLetterWords";
 
@@ -20,6 +23,9 @@ export default function Home() {
   const [isLoser, setIsLoser] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [words, setWords] = useState<string[]>([]);
+  const [incorrectGuessedLetters, setIncorrectGuessedLetters] = useState<string[]>([]);
+  const [correctGuessedLetters, setCorrectGuessedLetters] = useState<string[]>([]);
+  const [misplacedGuessedLetters, setMisplacedGuessedLetters] = useState<string[]>([]);
   const [correctWord, setCorrectWord] = useState('');
 
   useEffect(() => {
@@ -41,6 +47,9 @@ export default function Home() {
     setHasError(false);
     setUserInput('');
     setWords([]);
+    setIncorrectGuessedLetters([]);
+    setCorrectGuessedLetters([]);
+    setMisplacedGuessedLetters([]);
     setIsNewGame(true);
   }
 
@@ -56,6 +65,24 @@ export default function Home() {
     }
 
     setUserInput('');
+
+    const {
+      correctLetters,
+      misplacedLetters,
+      incorrectLetters
+    } = evaluateLetters(normalizedWord, correctWord);
+
+    // Union existing arrays of letters with recently guessed word
+    const newCorrectLetters = _.union([...correctGuessedLetters], correctLetters);
+    setCorrectGuessedLetters(newCorrectLetters);
+    setIncorrectGuessedLetters(_.union([...incorrectGuessedLetters], incorrectLetters));
+
+    // Remove any misplaced letters that have since been guessed in the correct position
+    setMisplacedGuessedLetters(
+      _.union([...misplacedGuessedLetters], misplacedLetters).filter(letter => {
+        return !newCorrectLetters.includes(letter);
+      })
+    );
     
     const updatedWords = [...words, normalizedWord];
     setWords(updatedWords);
@@ -69,6 +96,14 @@ export default function Home() {
     setIsWinner(isWin);
   };
 
+  const handleOnScreenKeyboardPress = (button: string) => {
+    if (button === '{bksp}') {
+      setUserInput(userInput.substring(0, userInput.length - 1));
+    } else {
+      setUserInput(`${userInput}${button}`);
+    }
+  }
+ 
   const renderNewGameButton = () => (
     <Button
       primary
@@ -114,34 +149,66 @@ export default function Home() {
   );
 
   const renderLossMessage = () => (
-    <Message negative>
-      {`Game Over. The correct word was: ${correctWord}.`}
-    </Message>
-
+    <Message
+      negative
+      header='Game Over'
+      content={`The correct word was: ${correctWord}.`}
+    />
   );
 
   const renderWinMessage = () => (
-    <Message positive>
-      {`Congratulations, you guessed the word in ${words.length} attempts!`}
-    </Message>
+    <Message
+      positive
+      header='Congratulations!'
+      content={`You guessed the word in ${words.length} attempts!`}
+    />
   );
 
   return (
-    <Grid centered>
-      <Grid.Row className={styles['game-container']}>
-        <GameGrid words={words} correctWord={correctWord} />
-      </Grid.Row>
-      <Grid.Row>
-        {renderInput()}
-      </Grid.Row>
-      <Grid.Row>
-        {hasError && renderErrorMessage()}
-        {isWinner && renderWinMessage()}
-        {isLoser && renderLossMessage()}
-      </Grid.Row>
-      <Grid.Row>
-        {(isWinner || isLoser) && renderNewGameButton()}
-      </Grid.Row>
-    </Grid>
+    <div className={styles['application-container']}>
+      <Grid centered>
+        <Grid.Row className={styles['game-container']}>
+          <GameGrid words={words} correctWord={correctWord} />
+        </Grid.Row>
+        <Grid.Row>
+          {renderInput()}
+        </Grid.Row>
+        <Grid.Row>
+          {hasError && renderErrorMessage()}
+          {isWinner && renderWinMessage()}
+          {isLoser && renderLossMessage()}
+        </Grid.Row>
+        <Grid.Row>
+          <Keyboard
+            onKeyPress={handleOnScreenKeyboardPress}
+            layout={{
+              default: [
+                "Q W E R T Y U I O P",
+                "A S D F G H J K L",
+                "Z X C V B N M",
+                "{bksp}"
+              ]
+            }}
+            buttonTheme={[
+              {
+                class: styles['incorrect-letters'],
+                buttons: `${incorrectGuessedLetters.join(' ') || null}`
+              },
+              {
+                class: styles['misplaced-letters'],
+                buttons: `${misplacedGuessedLetters.join(' ') || null}`
+              },
+              {
+                class: styles['correct-letters'],
+                buttons: `${correctGuessedLetters.join(' ') || null}`
+              },
+            ]}
+          />
+        </Grid.Row>
+        <Grid.Row>
+          {(isWinner || isLoser) && renderNewGameButton()}
+        </Grid.Row>
+      </Grid>
+    </div>
   );
 }

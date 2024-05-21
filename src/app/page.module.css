@@ -1,7 +1,24 @@
+.application-container {
+  width: 30%;
+  margin: auto;
+}
+
 .game-container {
   margin-top: 1em;
 }
 
 .error-message-content {
   text-align: left;
+}
+
+.correct-letters {
+  background-color: green !important;
+}
+
+.misplaced-letters {
+  background-color: yellow !important;
+}
+
+.incorrect-letters {
+  background-color: grey !important;
 }

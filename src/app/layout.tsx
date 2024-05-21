@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import 'semantic-ui-css/semantic.min.css';
+import 'react-simple-keyboard/build/css/index.css';
 
 const inter = Inter({ subsets: ["latin"] });
 
