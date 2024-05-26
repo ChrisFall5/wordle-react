@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { GameGrid } from "@/GameGrid/GameGrid";
+import { GameModal } from "@/GameModal/GameModal";
 import { Input, Grid, Button, Message } from "semantic-ui-react";
 import Keyboard from "react-simple-keyboard";
 import _ from 'lodash';
@@ -21,6 +22,7 @@ export default function Home() {
   const [hasError, setHasError] = useState(false);
   const [isWinner, setIsWinner] = useState(false);
   const [isLoser, setIsLoser] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [words, setWords] = useState<string[]>([]);
   const [incorrectGuessedLetters, setIncorrectGuessedLetters] = useState<string[]>([]);
@@ -51,6 +53,7 @@ export default function Home() {
     setCorrectGuessedLetters([]);
     setMisplacedGuessedLetters([]);
     setIsNewGame(true);
+    setIsModalOpen(false);
   }
 
   const submitWord = (word: string) => {
@@ -90,10 +93,14 @@ export default function Home() {
 
     if (!isWin && updatedWords.length >= 6) {
       setIsLoser(true);
+      setIsModalOpen(true);
       return
     }
 
     setIsWinner(isWin);
+    if (isWin) {
+      setIsModalOpen(true);
+    }
   };
 
   const handleOnScreenKeyboardPress = (button: string) => {
@@ -148,24 +155,18 @@ export default function Home() {
     />
   );
 
-  const renderLossMessage = () => (
-    <Message
-      negative
-      header='Game Over!'
-      content={`The correct word was: ${correctWord}.`}
-    />
-  );
-
-  const renderWinMessage = () => (
-    <Message
-      positive
-      header='Congratulations!'
-      content={`You guessed the word in ${words.length} attempts!`}
-    />
-  );
-
   return (
     <div className={styles['application-container']}>
+      <GameModal 
+        isOpen={isModalOpen}
+        headerText={isWinner ? 'Congratulations!' : 'Game Over!'}
+        content={
+          isWinner ?
+          `You guessed the word in ${words.length} attempts!`
+          : `The correct word was: ${correctWord}.`
+        }
+        renderNewGameButton={renderNewGameButton}
+      />
       <Grid centered>
         <Grid.Row className={styles['game-container']}>
           <GameGrid words={words} correctWord={correctWord} />
@@ -175,8 +176,6 @@ export default function Home() {
         </Grid.Row>
         <Grid.Row>
           {hasError && renderErrorMessage()}
-          {isWinner && renderWinMessage()}
-          {isLoser && renderLossMessage()}
         </Grid.Row>
         <Grid.Row>
           <Keyboard
@@ -204,9 +203,6 @@ export default function Home() {
               },
             ]}
           />
-        </Grid.Row>
-        <Grid.Row>
-          {(isWinner || isLoser) && renderNewGameButton()}
         </Grid.Row>
       </Grid>
     </div>
